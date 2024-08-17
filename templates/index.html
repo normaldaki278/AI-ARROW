@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dungeons & Dragons Demo</title>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            border: 0;
+            font-family: Arial, sans-serif;
+            background-color: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .container {
+            background-image: url('/static/img/kandinsky-download-1723800354138.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        h1 {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 48px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+            z-index: 30;
+            margin: 0;
+        }
+
+        #start-button {
+            font-size: 14px;
+            padding: 6px 12px;
+            cursor: pointer;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 5px;
+            z-index: 30;
+            display: none; /* Изначально скрыта */
+        }
+
+        #character-form {
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            z-index: 20;
+            color: white;
+            width: 280px;
+            text-align: center;
+        }
+
+        #character-form label {
+            display: block;
+            margin: 10px 0 5px;
+            text-align: left;
+        }
+
+        #character-form input, #character-form select, #character-form button {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border: none;
+            background-color: rgba(255, 255, 255, 0.9);
+            box-sizing: border-box;
+        }
+
+        #audio-settings {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            text-align: right;
+            z-index: 20;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 6px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .audio-controls {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .audio-controls button {
+            font-size: 12px;
+            padding: 4px;
+            margin-right: 6px;
+            flex-shrink: 0;
+            width: 110px; /* Еще больше уменьшаем размер кнопок */
+        }
+
+        .audio-controls input[type="range"] {
+            flex-grow: 1;
+            width: 180px; /* Еще больше уменьшаем ширину ползунков */
+            height: 5px; /* Еще больше уменьшаем высоту ползунков */
+        }
+
+        #loading-screen {
+            display: none;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            font-weight: bold;
+            height: 100vh;
+            width: 100vw;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 20;
+        }
+
+        #response {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 80%;
+            z-index: 30;
+            display: none; /* Изначально скрыт */
+        }
+
+        #dice-result {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+            font-size: 24px;
+            color: white;
+        }
+
+        #action-buttons {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            z-index: 30;
+        }
+
+        #action-buttons button {
+            padding: 10px 20px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #action-buttons button:hover {
+            background-color: rgba(200, 200, 200, 0.8);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Dungeons & Dragons Demo</h1>
+        
+        <!-- Форма выбора персонажа -->
+        <form id="character-form">
+            <label for="character_name">Имя персонажа:</label>
+            <input type="text" id="character_name" name="character_name" required>
+            
+            <label for="character_race">Выберите расу:</label>
+            <select id="character_race" name="character_race" required>
+                <option value="">Выберите расу</option>
+                <option value="Человек">Человек</option>
+                <option value="Эльф">Эльф</option>
+                <option value="Дварф">Дварф</option>
+                <option value="Полурослик">Полурослик</option>
+                <option value="Орк">Орк</option>
+                <option value="Гном">Гном</option>
+                <option value="Тифлинг">Тифлинг</option>
+                <option value="Драконорожденный">Драконорожденный</option>
+                <option value="Дроу">Дроу</option>
+                <option value="Полуэльф">Полуэльф</option>
+                <option value="Полуорк">Полуорк</option>
+                <option value="Ящеролюд">Ящеролюд</option>
+            </select>
+            
+            <label for="character_class">Выберите класс:</label>
+            <select id="character_class" name="character_class" required>
+                <option value="">Выберите класс</option>
+                <option value="Воин">Воин</option>
+                <option value="Маг">Маг</option>
+                <option value="Жрец">Жрец</option>
+                <option value="Плут">Плут</option>
+                <option value="Бард">Бард</option>
+                <option value="Паладин">Паладин</option>
+                <option value="Варвар">Варвар</option>
+                <option value="Следопыт">Следопыт</option>
+                <option value="Колдун">Колдун</option>
+                <option value="Чародей">Чародей</option>
+                <option value="Друид">Друид</option>
+                <option value="Монах">Монах</option>
+                <option value="Рыцарь">Рыцарь</option>
+            </select>
+            
+            <button type="submit">Подтвердить</button>
+        </form>
+        
+        <button id="start-button">Спуститься в подземелье</button>
+
+        <!-- Настройки звука -->
+        <div id="audio-settings">
+            <div class="audio-controls">
+                <button id="toggle-music">Выключить музыку</button>
+                <input type="range" id="volume-slider" min="0" max="100" value="50">
+            </div>
+            <div class="audio-controls">
+                <button id="toggle-voice">Выключить озвучку</button>
+                <input type="range" id="voice-slider" min="0" max="100" value="50">
+            </div>
+        </div>
+
+        <!-- Экран загрузки -->
+        <div id="loading-screen">Загрузка...</div>
+        
+        <!-- Контейнер для отображения текста сцены -->
+        <div id="response"></div>
+        
+        <!-- Контейнер для отображения результата броска кубика -->
+        <div id="dice-result"></div>
+        
+        <!-- Контейнер для кнопок действий -->
+        <div id="action-buttons"></div>
+    </div>
+    
+    <script>
+        let musicPlaying = true;
+        let voiceEnabled = true;
+        let characterData = {}; // Переменная для хранения данных персонажа
+        let gameHistory = "";  // Переменная для хранения истории игры
+
+        // Обработка выбора персонажа
+        document.getElementById('character-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+
+            // Сохранение данных персонажа в объект
+            characterData = {
+                character_name: formData.get('character_name'),
+                character_race: formData.get('character_race'),
+                character_class: formData.get('character_class')
+            };
+
+            // Меняем фон контейнера на новое изображение после успешного выбора персонажа
+            document.querySelector('.container').style.backgroundImage = "url('/static/img/kandinsky-download-1723800631806.png')";
+            console.log("Background image changed to: /static/img/kandinsky-download-1723800631806.png");
+            
+            // Скрываем форму выбора персонажа и показываем кнопку "Спуститься в подземелье"
+            document.getElementById('character-form').style.display = 'none';
+            document.getElementById('start-button').style.display = 'block';
+        });
+
+        document.getElementById('start-button').addEventListener('click', function() {
+            // Показываем экран загрузки
+            document.getElementById('loading-screen').style.display = 'flex';
+
+            // Скрываем кнопку, чтобы она больше не отображалась
+            document.getElementById('start-button').style.display = 'none';
+            
+            fetch('/start', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(characterData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Received data:", data);  // Отладочный вывод для проверки данных от сервера
+                document.getElementById('loading-screen').style.display = 'none';
+
+                if (data.image_url && data.scene_text && data.actions) {
+                    console.log("Actions received:", data.actions);  // Отладочный вывод для проверки массива действий
+                    
+                    // Обновляем фон контейнера на сгенерированное изображение
+                    document.querySelector('.container').style.backgroundImage = `url('${data.image_url}')`;
+                    
+                    // Отображаем текст сцены
+                    document.getElementById('response').textContent = data.scene_text;
+                    document.getElementById('response').style.display = 'block';  // Показать контейнер, когда текст получен
+
+                    // Добавляем сцену в историю игры
+                    gameHistory += data.scene_text + "\n";
+                    
+                    // Отображаем результат броска кубика
+                    document.getElementById('dice-result').textContent = "Результат броска кубика: " + data.dice_result;
+                    document.getElementById('dice-result').style.display = 'block';
+                    
+                    // Воспроизводим озвучку
+                    voiceResponse(data.scene_text);
+                    
+                    // Создаем или обновляем кнопки действий
+                    createActionButtons(data.actions);
+                } else {
+                    console.error('Error generating image or scene text:', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('loading-screen').style.display = 'none';
+            });
+        });
+
+        function createActionButtons(actions) {
+            const actionButtonsContainer = document.getElementById('action-buttons');
+            actionButtonsContainer.innerHTML = ''; // Очищаем предыдущие кнопки
+
+            if (!actions || actions.length === 0) {
+                console.error("No actions available to create buttons.");
+                return;
+            }
+
+            console.log("Actions to create buttons for:", actions); // Отладочный вывод
+
+            actions.forEach(action => {
+                console.log("Creating button for action:", action);  // Отладочный вывод
+                const button = document.createElement('button');
+                button.textContent = action;
+                
+                // Добавляем стили для кнопок
+                button.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+                button.style.color = 'black';
+                button.style.margin = '10px';
+                button.style.padding = '10px 20px';
+                button.style.border = 'none';
+                button.style.borderRadius = '5px';
+                button.style.cursor = 'pointer';
+
+                button.addEventListener('click', () => handleAction(action)); // Передаем текст действия
+                actionButtonsContainer.appendChild(button);
+            });
+
+            console.log("Total buttons created:", actionButtonsContainer.children.length); // Добавлено
+
+            if (actionButtonsContainer.children.length === 0) {
+                console.error("Buttons were not created.");
+            } else {
+                console.log("Buttons created successfully.");
+            }
+        }
+
+        function handleAction(action) {
+    console.log("Пользователь выбрал действие:", action);
+    document.getElementById('loading-screen').style.display = 'flex';
+
+    fetch('/choose_action', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            action: action,
+            character_data: characterData,
+            game_history: gameHistory
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log("Received data:", data);
+        document.getElementById('loading-screen').style.display = 'none';
+        
+        if (data.image_url && data.scene_text && data.actions) {
+            // Обновляем фон контейнера на сгенерированное изображение
+            document.querySelector('.container').style.backgroundImage = `url('${data.image_url}')`;
+            
+            // Отображаем текст сцены
+            document.getElementById('response').textContent = data.scene_text;
+            document.getElementById('response').style.display = 'block';  // Показать контейнер, когда текст получен
+
+            // Добавляем сцену в историю игры
+            gameHistory += data.scene_text + "\n";
+            
+            // Отображаем результат броска кубика
+            document.getElementById('dice-result').textContent = "Результат броска кубика: " + data.dice_result;
+            document.getElementById('dice-result').style.display = 'block';
+            
+            // Воспроизводим озвучку
+            voiceResponse(data.scene_text);
+            
+            // Обновляем кнопки действий в зависимости от результата кубика
+            if (data.dice_result > 10) {
+                createActionButtons(data.actions); // Если результат больше 10, показываем обычные действия
+            } else {
+                // Если результат меньше или равен 10, добавляем альтернативные действия или сцену неудачи
+                document.getElementById('response').textContent += "\nУ вас не получилось выполнить задуманное.";
+                createActionButtons(["Попробовать еще раз", ...data.actions.slice(1)]);
+            }
+        } else {
+            console.error('Error generating new scene:', data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('loading-screen').style.display = 'none';
+    });
+}
+
+
+        // Обработка включения/выключения музыки
+        document.getElementById('toggle-music').addEventListener('click', function() {
+            musicPlaying = !musicPlaying;
+            fetch('/toggle_music', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ play: musicPlaying })
+            })
+            .then(() => {
+                this.textContent = musicPlaying ? 'Выключить музыку' : 'Включить музыку';
+            });
+        });
+
+        // Обработка изменения громкости музыки
+        document.getElementById('volume-slider').addEventListener('input', function() {
+            const volume = this.value / 100;
+            fetch('/set_volume', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ volume: volume })
+            });
+        });
+
+        // Обработка включения/выключения озвучки
+        document.getElementById('toggle-voice').addEventListener('click', function() {
+            voiceEnabled = !voiceEnabled;
+            this.textContent = voiceEnabled ? 'Выключить озвучку' : 'Включить озвучку';
+        });
+
+        // Обработка изменения громкости озвучки
+        document.getElementById('voice-slider').addEventListener('input', function() {
+            const volume = this.value / 100;
+            fetch('/set_voice_volume', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ volume: volume })
+            });
+        });
+
+        function voiceResponse(text) {
+            fetch('/speak', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ text: text })
+            });
+        }
+    </script>
+</body>
+</html>
